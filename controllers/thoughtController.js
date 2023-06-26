@@ -1,5 +1,5 @@
-const { ObjectID } = require("mongoose").Types;
 const Thoughts = require("../models/Thought");
+const User = require("../models/User");
 
 module.exports = {
   async getThoughts(req, res) {
@@ -13,35 +13,48 @@ module.exports = {
 
   async getSingleThought(req, res) {
     try {
-      const thought = await Thoughts.findOne({ _id: req.params.thoughtId });
-      res.json(thoughts);
+      const thought = await Thoughts.findOne({
+        _id: req.params.thoughtId,
+      }).select("-__v");
       if (!thought) {
-        res.status(404).json({
-          message: "Could not find a thought with this ID, please try again",
+        return res.status(404).json({
+          message: "No thought found with this ID, please try again",
         });
       }
+      res.json(thought);
     } catch (err) {
       res.status(500).json(err);
     }
   },
 
-  async createThought(res, req) {
+  async createThought(req, res) {
     try {
       const newThought = await Thoughts.create(req.body);
+      const user = await User.findOneAndUpdate(
+        { username: req.body.username },
+        { $addToSet: { thoughts: newThought._id } },
+        { new: true }
+      );
+      if (!user) {
+        return res.status(404).json({
+          message: "No thought found with this ID, please try again",
+        });
+      }
       res.json(newThought);
     } catch (err) {
       res.status(500).json(err);
+      console.log(err);
     }
   },
 
-  async deleteThought(res, req) {
+  async deleteThought(req, res) {
     try {
       const thought = await Thoughts.findOneAndDelete({
         _id: req.params.thoughtId,
       });
-      res.json(thoughts);
+      res.json(thought);
       if (!thought) {
-        res
+        return res
           .status(404)
           .json({ message: "No thought found with this ID, please try again" });
       }
@@ -50,23 +63,58 @@ module.exports = {
     }
   },
 
-  async updateThought (res, req) {
+  async updateThought(req, res) {
     try {
-        console.log("still working on it");
-
-    } catch (err) { res.status(500).json(err); }
-  }, 
-
-  async addReaction (res, req) {
-    try {
-        console.log("still working on it");
-
-    } catch (err) { res.status(500).json(err); }
+      const thought = await Thoughts.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $set: req.body },
+        { new: true }
+      );
+      if (!thought) {
+        return res
+          .status(404)
+          .json({ message: "No thought found with this ID, please try again" });
+      }
+      res.json(thought);
+    } catch (err) {
+      res.status(500).json(err);
+    }
   },
 
-  async deleteReaction (res, req) {
+  async addReaction(req, res) {
     try {
-        console.log("still working on it");
-    } catch (err) { res.status(500).json(err); }
-  }
+      const thought = await Thoughts.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $addToSet: { reaction: req.body } },
+        { runValidators: true, new: true }
+      );
+      if (!thought) {
+        return res
+          .status(404)
+          .json({ message: "No thought found with this ID, please try again" });
+      }
+      res.json(thought.reaction);
+    } catch (err) {
+      res.status(500).json(err);
+      console.log(err);
+    }
+  },
+
+  async deleteReaction(req, res) {
+    try {
+      const thought = await Thoughts.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $pull: { reaction: { _id: req.params.reactionId } } },
+        { runValidators: true, new: true }
+      );
+      if (!thought) {
+        return res
+          .status(404)
+          .json({ message: "No thought found with this ID, please try again" });
+      }
+      res.json(thought);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  },
 };

@@ -1,10 +1,11 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model, Types } = require("mongoose");
+const reactions = require("./Reaction");
 
 const thoughtSchema = new Schema(
   {
     thoughtText: {
       type: String,
-      required: true,
+      // required: true,
       minLength: 1,
       maxLength: 280,
     },
@@ -14,9 +15,9 @@ const thoughtSchema = new Schema(
     },
     username: {
       type: String,
-      required: true,
+      // required: true,
     },
-    reaction: [{type: Schema.Types.ObjectId, ref: 'reaction' }],
+    reaction: [reactions],
   },
   {
     toJSON: {

@@ -18,9 +18,9 @@ module.exports = {
       );
 
       if (!user) {
-        res
-          .status(404)
-          .JSON({ message: "No User found with that ID, try another ID" });
+        return res.status(404).json({
+          message: "No User found with that ID, try another ID",
+        });
       }
       res.json(user);
     } catch (err) {
@@ -30,7 +30,7 @@ module.exports = {
 
   async createUser(req, res) {
     try {
-      newUser = await User.create(req.body);
+      const newUser = await User.create(req.body);
       res.json(newUser);
     } catch (err) {
       res.status(500).json(err);
@@ -51,21 +51,37 @@ module.exports = {
     }
   },
 
-  async updateUser (res, req) {
+  async updateUser(req, res) {
     try {
-        console.log("still working on it");
-    } catch (err) { res.status(500).json(err); }
-  }, 
-
-  async addFriend (res, req) {
-    try {
-        console.log("still working on it");
-    } catch (err) { res.status(500).json(err); }
+      const user = await User.findOneAndUpdate(
+        { _id: req.params.userId },
+        { $set: req.body },
+        { new: true }
+      );
+      if (!user) {
+        res
+          .status(404)
+          .json({ message: "No User found with that ID, please try again" });
+      }
+      res.json(user);
+    } catch (err) {
+      res.status(500).json(err);
+    }
   },
 
-  async deleteFriend (res, req) {
+  async addFriend(req, res) {
     try {
-        console.log("still working on it");
-    } catch (err) { res.status(500).json(err); }
-  }
+      console.log("still working on it");
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  },
+
+  async deleteFriend(req, res) {
+    try {
+      console.log("still working on it");
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  },
 };
