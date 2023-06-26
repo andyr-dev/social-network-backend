@@ -1,25 +1,24 @@
-const { ObjectId } = require("mongoose").Types;
 const User = require("../models/User");
-
+const mongoose  = require("mongoose");
 module.exports = {
   async getUsers(req, res) {
     try {
-      const users = await User.find();
+      const users = await User.find().populate('thoughts').populate('friends').select("-__v");
       res.json(users);
     } catch (err) {
-      res.status(500).JSON(err);
+      res.status(500).json(err);
+      console.log(err);
     }
   },
 
+
   async getSingleUser(req, res) {
     try {
-      const user = await User.findOne({ _id: req.params.userId }).select(
-        "-__v"
-      );
+      const user = await User.findOne({ _id: req.params.userId }).select("-__v");
 
       if (!user) {
         return res.status(404).json({
-          message: "No User found with that ID, try another ID",
+          message: "No user found with that ID, please try again",
         });
       }
       res.json(user);
@@ -42,9 +41,9 @@ module.exports = {
       const user = await User.findOneAndDelete({ _id: req.params.userId });
       res.json(user);
       if (!user) {
-        res
+        return res
           .status(404)
-          .json({ message: "No User found with that ID, try another ID" });
+          .json({ message: "No user found with that ID, please try again" });
       }
     } catch (err) {
       res.status(500).json(err);
@@ -59,9 +58,9 @@ module.exports = {
         { new: true }
       );
       if (!user) {
-        res
+        return res
           .status(404)
-          .json({ message: "No User found with that ID, please try again" });
+          .json({ message: "No user found with that ID, please try again" });
       }
       res.json(user);
     } catch (err) {
@@ -71,7 +70,19 @@ module.exports = {
 
   async addFriend(req, res) {
     try {
-      console.log("still working on it");
+      const user = await User.findOneAndUpdate(
+        { _id: req.params.userId },
+        { $addToSet: { friends: req.params.friendId } },
+        { new: true }
+      );
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "No user found with that ID, please try again" });
+      }
+
+      res.json("Successfully added friend!");
     } catch (err) {
       res.status(500).json(err);
     }
@@ -79,7 +90,19 @@ module.exports = {
 
   async deleteFriend(req, res) {
     try {
-      console.log("still working on it");
+      const user = await User.findOneAndUpdate(
+        { _id: req.params.userId },
+        { $pull: { friends: req.params.friendId } },
+        { new: true }
+      );
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "No user found with that ID, please try again" });
+      }
+
+      res.json("Successfully removed friend");
     } catch (err) {
       res.status(500).json(err);
     }

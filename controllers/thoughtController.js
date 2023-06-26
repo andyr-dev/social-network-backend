@@ -4,7 +4,7 @@ const User = require("../models/User");
 module.exports = {
   async getThoughts(req, res) {
     try {
-      const thoughts = await Thoughts.find();
+      const thoughts = await Thoughts.find().select("-__v");
       res.json(thoughts);
     } catch (err) {
       res.status(500).json(err);
@@ -31,19 +31,18 @@ module.exports = {
     try {
       const newThought = await Thoughts.create(req.body);
       const user = await User.findOneAndUpdate(
-        { username: req.body.username },
+        { _id: req.body.id },
         { $addToSet: { thoughts: newThought._id } },
         { new: true }
-      );
+      ).select("--__v");
       if (!user) {
         return res.status(404).json({
-          message: "No thought found with this ID, please try again",
+          message: "No user found with this ID, please try again",
         });
       }
       res.json(newThought);
     } catch (err) {
       res.status(500).json(err);
-      console.log(err);
     }
   },
 
@@ -96,7 +95,6 @@ module.exports = {
       res.json(thought.reaction);
     } catch (err) {
       res.status(500).json(err);
-      console.log(err);
     }
   },
 
